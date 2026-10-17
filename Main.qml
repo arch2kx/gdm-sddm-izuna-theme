@@ -13,11 +13,32 @@ Rectangle {
     property real uiScale: config.uiScale ? Number(config.uiScale) : 1.0
     property real s: (height / 1080) * uiScale
     property string fontFamily: config.fontFamily ? config.fontFamily : "Adwaita Sans"
-    property color accent: config.accent ? config.accent : "#c6a2ff"
+    property color accent: config.accent ? config.accent : "#c7c1de"
     property bool showDate: String(config.showDate) === "true"
     property bool userList: String(config.userList) === "true"
     property string timeFormat: config.timeFormat ? config.timeFormat : "HH:mm"
     property string dateFormat: config.dateFormat ? config.dateFormat : "dddd, d MMMM"
+    property string topBarFormat: config.topBarFormat ? config.topBarFormat : "ddd d MMM  HH:mm"
+    property color panel: "#e61e1e1e"
+    property color panelHover: "#e6333333"
+    property real avatarIconScale: config.avatarIconScale ? Number(config.avatarIconScale) : 1.0
+    property real shadowOffset: config.shadowOffset ? Number(config.shadowOffset) : 0.015
+    property real shadowBlur: config.shadowBlur ? Number(config.shadowBlur) : 0.4
+    property real shadowOpacity: config.shadowOpacity ? Number(config.shadowOpacity) : 0.75
+    property url backIcon: Qt.resolvedUrl(config.backIcon ? config.backIcon : "assets/backicon.png")
+    property real backIconSize: config.backIconSize ? Number(config.backIconSize) : 30
+    property url powerIcon: Qt.resolvedUrl(config.powerIcon ? config.powerIcon : "assets/powericon.png")
+    property real powerIconSize: config.powerIconSize ? Number(config.powerIconSize) : 34
+    property url gearIcon: Qt.resolvedUrl(config.gearIcon ? config.gearIcon : "assets/settingsicon.png")
+    property real gearIconSize: config.gearIconSize ? Number(config.gearIconSize) : 34
+    property url defaultAvatar: Qt.resolvedUrl(config.defaultAvatar ? config.defaultAvatar : "assets/usericon.png")
+
+    function faceFor(icon) {
+        var path = String(icon)
+        if (path === "" || path === "undefined" || path.indexOf("/usr/share/sddm/faces/.face.icon") !== -1)
+            return ""
+        return path
+    }
 
     function unlock() {
         if (!locked)
@@ -29,6 +50,7 @@ Rectangle {
     function lock() {
         locked = true
         password.text = ""
+        password.reveal = false
         root.forceActiveFocus()
     }
 
@@ -62,6 +84,14 @@ Rectangle {
         }
     }
 
+    ComboBox {
+        id: sessions
+        visible: false
+        model: sessionModel
+        textRole: "name"
+        currentIndex: sessionModel.lastIndex
+    }
+
     Image {
         id: wallpaper
         anchors.fill: parent
@@ -92,46 +122,208 @@ Rectangle {
         enabled: !root.locked
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
-        Row {
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 34 * root.s
+            text: Qt.formatDateTime(root.now, root.topBarFormat)
+            color: "white"
+            font.family: root.fontFamily
+            font.pixelSize: 24 * root.s
+            font.weight: Font.DemiBold
+        }
+
+        Rectangle {
+            id: powerButton
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.margins: 36 * root.s
-            spacing: 12 * root.s
+            anchors.margins: 28 * root.s
+            width: 56 * root.s
+            height: 56 * root.s
+            radius: width / 2
+            color: powerArea.containsMouse || powerPopup.visible ? root.panelHover : root.panel
+            Behavior on color { ColorAnimation { duration: 120 } }
 
-            Repeater {
-                model: [
-                    { label: "Suspend", show: sddm.canSuspend },
-                    { label: "Restart", show: sddm.canReboot },
-                    { label: "Power Off", show: sddm.canPowerOff }
-                ]
-                delegate: Rectangle {
-                    visible: modelData.show
-                    width: powerLabel.implicitWidth + 44 * root.s
-                    height: 48 * root.s
-                    radius: height / 2
-                    color: powerArea.containsMouse ? "#44ffffff" : "#22ffffff"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+            Image {
+                id: powerImage
+                anchors.centerIn: parent
+                width: root.powerIconSize * root.s
+                height: root.powerIconSize * root.s
+                source: root.powerIcon
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
+                visible: status === Image.Ready
+            }
 
-                    Text {
-                        id: powerLabel
-                        anchors.centerIn: parent
-                        text: modelData.label
-                        color: "white"
-                        font.family: root.fontFamily
-                        font.pixelSize: 20 * root.s
+            Icon {
+                anchors.centerIn: parent
+                width: 30 * root.s
+                height: 30 * root.s
+                kind: "power"
+                visible: powerImage.status !== Image.Ready
+            }
+
+            MouseArea {
+                id: powerArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: powerPopup.visible ? powerPopup.close() : powerPopup.open()
+            }
+
+            Popup {
+                id: powerPopup
+                x: powerButton.width - width
+                y: powerButton.height + 10 * root.s
+                width: 250 * root.s
+                padding: 6 * root.s
+                closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
+
+                background: Rectangle {
+                    radius: 12 * root.s
+                    color: "#f2232323"
+                }
+
+                contentItem: Column {
+                    Repeater {
+                        model: [
+                            { label: "Suspend", show: sddm.canSuspend },
+                            { label: "Restart", show: sddm.canReboot },
+                            { label: "Power Off", show: sddm.canPowerOff }
+                        ]
+                        delegate: ItemDelegate {
+                            visible: modelData.show
+                            width: 238 * root.s
+                            height: 52 * root.s
+                            contentItem: Text {
+                                text: modelData.label
+                                color: "white"
+                                font.family: root.fontFamily
+                                font.pixelSize: 21 * root.s
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10 * root.s
+                            }
+                            background: Rectangle {
+                                radius: 8 * root.s
+                                color: parent.hovered ? "#33ffffff" : "transparent"
+                            }
+                            onClicked: {
+                                if (index === 0)
+                                    sddm.suspend()
+                                else if (index === 1)
+                                    sddm.reboot()
+                                else
+                                    sddm.powerOff()
+                            }
+                        }
                     }
+                }
+            }
+        }
 
-                    MouseArea {
-                        id: powerArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (index === 0)
-                                sddm.suspend()
-                            else if (index === 1)
-                                sddm.reboot()
-                            else
-                                sddm.powerOff()
+        Rectangle {
+            id: gearButton
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 36 * root.s
+            width: 60 * root.s
+            height: 60 * root.s
+            radius: width / 2
+            color: gearArea.containsMouse || sessionPopup.visible ? root.panelHover : root.panel
+            Behavior on color { ColorAnimation { duration: 120 } }
+
+            Image {
+                id: gearImage
+                anchors.centerIn: parent
+                width: root.gearIconSize * root.s
+                height: root.gearIconSize * root.s
+                source: root.gearIcon
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
+                visible: status === Image.Ready
+            }
+
+            Icon {
+                anchors.centerIn: parent
+                width: 32 * root.s
+                height: 32 * root.s
+                kind: "gear"
+                visible: gearImage.status !== Image.Ready
+            }
+
+            MouseArea {
+                id: gearArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: sessionPopup.visible ? sessionPopup.close() : sessionPopup.open()
+            }
+
+            Popup {
+                id: sessionPopup
+                x: gearButton.width - width
+                y: -height - 12 * root.s
+                width: 340 * root.s
+                padding: 8 * root.s
+                closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
+
+                background: Rectangle {
+                    radius: 18 * root.s
+                    color: "#f5292929"
+                }
+
+                contentItem: Column {
+                    spacing: 2 * root.s
+
+                    Repeater {
+                        model: sessionModel
+                        delegate: ItemDelegate {
+                            id: sessionItem
+                            width: 324 * root.s
+                            height: 52 * root.s
+                            highlighted: sessions.currentIndex === index
+                            leftPadding: 16 * root.s
+                            contentItem: Row {
+                                spacing: 16 * root.s
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 22 * root.s
+                                    height: 22 * root.s
+                                    radius: width / 2
+                                    color: "transparent"
+                                    border.width: 2 * root.s
+                                    border.color: "#b3ffffff"
+
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 10 * root.s
+                                        height: 10 * root.s
+                                        radius: width / 2
+                                        color: "white"
+                                        visible: sessionItem.highlighted
+                                    }
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 262 * root.s
+                                    text: model.name
+                                    color: "white"
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 21 * root.s
+                                    elide: Text.ElideRight
+                                }
+                            }
+                            background: Rectangle {
+                                radius: 10 * root.s
+                                color: sessionItem.highlighted ? "#40ffffff" : (sessionItem.hovered ? "#22ffffff" : "transparent")
+                            }
+                            onClicked: {
+                                sessions.currentIndex = index
+                                sessionPopup.close()
+                                password.forceActiveFocus()
+                            }
                         }
                     }
                 }
@@ -169,23 +361,13 @@ Rectangle {
                             anchors.centerIn: parent
                             spacing: 18 * root.s
 
-                            Rectangle {
+                            Avatar {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: 160 * root.s
                                 height: 160 * root.s
-                                radius: width / 2
-                                color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.28)
-                                border.width: 3 * root.s
-                                border.color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.7)
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: (model.realName ? model.realName : model.name).charAt(0).toUpperCase()
-                                    color: "white"
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 70 * root.s
-                                    font.weight: Font.DemiBold
-                                }
+                                primary: root.faceFor(model.icon)
+                                fallback: root.defaultAvatar
+                                iconScale: root.avatarIconScale
                             }
 
                             Text {
@@ -229,42 +411,108 @@ Rectangle {
                 }
             }
 
-            TextField {
-                id: password
+            Item {
                 width: parent.width
-                height: 68 * root.s
-                echoMode: TextInput.Password
-                placeholderText: "Password"
-                placeholderTextColor: "#aaffffff"
-                color: "white"
-                font.family: root.fontFamily
-                font.pixelSize: 24 * root.s
-                horizontalAlignment: TextInput.AlignHCenter
-                verticalAlignment: TextInput.AlignVCenter
-                leftPadding: 26 * root.s
-                rightPadding: 26 * root.s
-                selectByMouse: true
+                height: password.height
 
-                transform: Translate { id: shift }
+                Rectangle {
+                    id: backButton
+                    anchors.right: password.left
+                    anchors.rightMargin: 14 * root.s
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 52 * root.s
+                    height: 52 * root.s
+                    radius: width / 2
+                    color: backArea.containsMouse ? root.panelHover : root.panel
+                    Behavior on color { ColorAnimation { duration: 120 } }
 
-                background: Rectangle {
-                    radius: height / 2
-                    color: password.activeFocus ? "#33ffffff" : "#22ffffff"
-                    border.width: 2 * root.s
-                    border.color: password.activeFocus ? root.accent : "transparent"
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Image {
+                        id: backImage
+                        anchors.centerIn: parent
+                        width: root.backIconSize * root.s
+                        height: root.backIconSize * root.s
+                        source: root.backIcon
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: status === Image.Ready
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -3 * root.s
+                        text: "‹"
+                        color: "white"
+                        font.pixelSize: 42 * root.s
+                        visible: backImage.status !== Image.Ready
+                    }
+
+                    MouseArea {
+                        id: backArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.lock()
+                    }
                 }
 
-                onAccepted: root.login()
-                onTextChanged: failLabel.opacity = 0
-                Keys.onEscapePressed: root.lock()
+                TextField {
+                    id: password
+                    property bool reveal: false
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 400 * root.s
+                    height: 60 * root.s
+                    echoMode: reveal ? TextInput.Normal : TextInput.Password
+                    placeholderText: "Password"
+                    placeholderTextColor: "#99ffffff"
+                    color: "white"
+                    font.family: root.fontFamily
+                    font.pixelSize: 24 * root.s
+                    horizontalAlignment: TextInput.AlignLeft
+                    verticalAlignment: TextInput.AlignVCenter
+                    leftPadding: 18 * root.s
+                    rightPadding: 64 * root.s
+                    selectByMouse: true
 
-                SequentialAnimation {
-                    id: shake
-                    NumberAnimation { target: shift; property: "x"; to: -18 * root.s; duration: 60 }
-                    NumberAnimation { target: shift; property: "x"; to: 18 * root.s; duration: 90 }
-                    NumberAnimation { target: shift; property: "x"; to: -10 * root.s; duration: 70 }
-                    NumberAnimation { target: shift; property: "x"; to: 0; duration: 60 }
+                    transform: Translate { id: shift }
+
+                    background: Rectangle {
+                        radius: 8 * root.s
+                        color: "#232227"
+                        border.width: 2 * root.s
+                        border.color: password.activeFocus ? root.accent : "#44ffffff"
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                    }
+
+                    onAccepted: root.login()
+                    onTextChanged: failLabel.opacity = 0
+                    Keys.onEscapePressed: root.lock()
+
+                    Icon {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 18 * root.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 30 * root.s
+                        height: 30 * root.s
+                        kind: password.reveal ? "eye" : "eyeoff"
+                        tint: "#e6ffffff"
+
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -10 * root.s
+                            onClicked: {
+                                password.reveal = !password.reveal
+                                password.forceActiveFocus()
+                            }
+                        }
+                    }
+
+                    SequentialAnimation {
+                        id: shake
+                        NumberAnimation { target: shift; property: "x"; to: -18 * root.s; duration: 60 }
+                        NumberAnimation { target: shift; property: "x"; to: 18 * root.s; duration: 90 }
+                        NumberAnimation { target: shift; property: "x"; to: -10 * root.s; duration: 70 }
+                        NumberAnimation { target: shift; property: "x"; to: 0; duration: 60 }
+                    }
                 }
             }
 
@@ -278,63 +526,6 @@ Rectangle {
                 font.family: root.fontFamily
                 font.pixelSize: 19 * root.s
                 Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-
-            ComboBox {
-                id: sessions
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 300 * root.s
-                height: 46 * root.s
-                model: sessionModel
-                textRole: "name"
-                currentIndex: sessionModel.lastIndex
-
-                background: Item {}
-                indicator: Item {}
-                contentItem: Text {
-                    text: sessions.displayText
-                    color: "#ddffffff"
-                    font.family: root.fontFamily
-                    font.pixelSize: 19 * root.s
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
-                }
-
-                delegate: ItemDelegate {
-                    width: sessions.width
-                    height: 46 * root.s
-                    highlighted: sessions.highlightedIndex === index
-                    contentItem: Text {
-                        text: model.name
-                        color: "#1c1424"
-                        font.family: root.fontFamily
-                        font.pixelSize: 19 * root.s
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    background: Rectangle {
-                        radius: 12 * root.s
-                        color: highlighted ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.35) : "transparent"
-                    }
-                }
-
-                popup: Popup {
-                    y: sessions.height
-                    width: sessions.width
-                    padding: 2 * root.s
-                    implicitHeight: contentItem.implicitHeight + 4 * root.s
-                    contentItem: ListView {
-                        clip: true
-                        implicitHeight: contentHeight
-                        model: sessions.popupVisible ? sessions.delegateModel : null
-                        currentIndex: sessions.highlightedIndex
-                    }
-                    background: Rectangle {
-                        radius: 16 * root.s
-                        color: "#f5ffffff"
-                    }
-                }
             }
         }
 
@@ -355,23 +546,21 @@ Rectangle {
                     opacity: current ? 1 : 0.65
                     Behavior on opacity { NumberAnimation { duration: 150 } }
 
-                    Rectangle {
+                    Avatar {
                         id: miniAvatar
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 88 * root.s
                         height: 88 * root.s
-                        radius: width / 2
-                        color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.28)
-                        border.width: (current ? 4 : 1) * root.s
-                        border.color: current ? root.accent : Qt.rgba(1, 1, 1, 0.4)
+                        primary: root.faceFor(model.icon)
+                        fallback: root.defaultAvatar
+                        iconScale: root.avatarIconScale
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: (model.realName ? model.realName : model.name).charAt(0).toUpperCase()
-                            color: "white"
-                            font.family: root.fontFamily
-                            font.pixelSize: 38 * root.s
-                            font.weight: Font.DemiBold
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: (current ? 4 : 0) * root.s
+                            border.color: root.accent
                         }
                     }
 
@@ -411,7 +600,7 @@ Rectangle {
         Column {
             id: clockBox
             anchors.horizontalCenter: parent.horizontalCenter
-            y: root.height * 0.07
+            y: root.height * 0.1
             spacing: 4
 
             Item {
@@ -420,6 +609,7 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Text {
+                    visible: clockShadow.status !== Loader.Ready
                     x: 0
                     y: 6 * root.s
                     text: clockText.text
@@ -427,14 +617,27 @@ Rectangle {
                     color: "#55000000"
                 }
 
+                Loader {
+                    id: clockShadow
+                    anchors.fill: parent
+                    source: "Shadow.qml"
+                    onLoaded: {
+                        item.target = clockText
+                        item.shadowVerticalOffset = root.height * root.shadowOffset
+                        item.shadowBlur = root.shadowBlur
+                        item.shadowOpacity = root.shadowOpacity
+                    }
+                }
+
                 Text {
                     id: clockText
+                    visible: clockShadow.status !== Loader.Ready
                     text: Qt.formatTime(root.now, root.timeFormat)
                     color: "white"
                     font.family: root.fontFamily
-                    font.pixelSize: root.height * 0.2
+                    font.pixelSize: root.height * 0.25
                     font.weight: Font.Black
-                    font.letterSpacing: -root.height * 0.006
+                    font.letterSpacing: -root.height * 0.009
                 }
             }
 
