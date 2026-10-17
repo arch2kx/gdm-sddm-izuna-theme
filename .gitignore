@@ -54,3 +54,6 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Wallpaper (well the wallpaper Arch uses isn't his own)
+assets/wallpaper.png

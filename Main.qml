@@ -5,10 +5,11 @@ Rectangle {
     id: root
     width: 1920
     height: 1080
-    color: "#0b0710"
+    color: solidColor
     focus: true
 
     property bool locked: true
+    property color solidColor: config.solidColor ? config.solidColor : "#242424"
     property date now: new Date()
     property real uiScale: config.uiScale ? Number(config.uiScale) : 1.0
     property real s: (height / 1080) * uiScale
@@ -103,6 +104,7 @@ Rectangle {
     Loader {
         anchors.fill: parent
         source: "Blur.qml"
+        active: wallpaper.status === Image.Ready
         opacity: root.locked ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
         onLoaded: item.target = wallpaper
@@ -111,6 +113,7 @@ Rectangle {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
+        visible: wallpaper.status === Image.Ready
         opacity: root.locked ? 0.12 : 0.4
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
     }
@@ -600,7 +603,7 @@ Rectangle {
         Column {
             id: clockBox
             anchors.horizontalCenter: parent.horizontalCenter
-            y: root.height * 0.1
+            y: root.height * 0.05
             spacing: 4
 
             Item {

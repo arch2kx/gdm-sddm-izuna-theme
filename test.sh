@@ -2,9 +2,11 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "$0")" && pwd)"
-WALL="${1:-$HOME/Pictures/Current_Pics/Blue_Archive/izuna_dress_wallpaper.png}"
+WALL="${1:-}"
 
 mkdir -p "$SRC/assets"
-cp "$WALL" "$SRC/assets/wallpaper.png"
+if [ -n "$WALL" ]; then
+    cp "$WALL" "$SRC/assets/wallpaper.png"
+fi
 
 exec sddm-greeter-qt6 --test-mode --theme "$SRC"

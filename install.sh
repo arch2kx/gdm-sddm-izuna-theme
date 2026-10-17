@@ -3,12 +3,14 @@ set -euo pipefail
 
 THEME=gdm-style
 SRC="$(cd "$(dirname "$0")" && pwd)"
-WALL="${1:-$HOME/Pictures/Current_Pics/Blue_Archive/izuna_dress_wallpaper.png}"
+WALL="${1:-$SRC/assets/wallpaper.png}"
 DEST="/usr/share/sddm/themes/$THEME"
 
 sudo mkdir -p "$DEST/assets"
 sudo install -m644 "$SRC/Main.qml" "$SRC/Blur.qml" "$SRC/Avatar.qml" "$SRC/Icon.qml" "$SRC/Shadow.qml" "$SRC/theme.conf" "$SRC/metadata.desktop" "$DEST/"
-sudo install -Dm644 "$WALL" "$DEST/assets/wallpaper.png"
+if [ -f "$WALL" ]; then
+    sudo install -Dm644 "$WALL" "$DEST/assets/wallpaper.png"
+fi
 for f in usericon.png settingsicon.png powericon.png backicon.png; do
     if [ -f "$SRC/assets/$f" ]; then
         sudo install -Dm644 "$SRC/assets/$f" "$DEST/assets/$f"

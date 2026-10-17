@@ -1,12 +1,16 @@
 # gdm-sddm-izuna-theme
 
+<p align="center">
+  <img src="assets/readme-screenshot.png" width="350" alt="Izuna Dress Background (Owner-used only)">
+</p>
+
 A custom SDDM theme styled after GNOME's GDM, written from scratch in plain QML, with a massive clock lock screen and a blurred login screen.
 
 ## Features
 
 - Lock screen with a large clock. Click or press any key to unlock.
 - Blurred login screen with avatar, password field, session picker and power menu.
-- Custom icons, accent colour, font and clock shadow, all set in `theme.conf`.
+- Custom icons, accent color, font and clock shadow, all set in `theme.conf`.
 
 ## Requirements
 
@@ -36,11 +40,11 @@ This copies the theme to `/usr/share/sddm/themes/gdm-style` and sets it as the c
 ./test.sh /path/to/your/wallpaper.png
 ```
 
-## Customise
+## Customize
 
-Edit `theme.conf` for the font, accent colour, UI scale, clock shadow and icon sizes. The icons live in `assets/` (`usericon.png`, `settingsicon.png`, `powericon.png`, `backicon.png`). Swap them for your own.
+Edit `theme.conf` for the font, accent color, UI scale, clock shadow and icon sizes. The icons live in `assets/` (`usericon.png`, `settingsicon.png`, `powericon.png`, `backicon.png`). Swap them for your own. The Izuna wallpaper is not supplied for obvious reasons! It is not my own and I've modified specially for this theme! You'll have to private message me if you want it.
 
-## AI disclosure
+## AI Disclosure
 
 Parts of this theme were written with help from Claude (Anthropic).
 
