@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=GDM Style
+Description=GDM inspired lock screen and login, written from scratch
+Author=arch2kx
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=gdm-style
+Theme-API=2.0
