@@ -12,7 +12,7 @@ Rectangle {
     property date now: new Date()
     property real uiScale: config.uiScale ? Number(config.uiScale) : 1.0
     property real s: (height / 1080) * uiScale
-    property string fontFamily: config.fontFamily ? config.fontFamily : "Cantarell"
+    property string fontFamily: config.fontFamily ? config.fontFamily : "Adwaita Sans"
     property color accent: config.accent ? config.accent : "#c6a2ff"
     property bool showDate: String(config.showDate) === "true"
     property bool userList: String(config.userList) === "true"
@@ -322,8 +322,8 @@ Rectangle {
                 popup: Popup {
                     y: sessions.height
                     width: sessions.width
-                    padding: 6 * root.s
-                    implicitHeight: contentItem.implicitHeight + 12 * root.s
+                    padding: 2 * root.s
+                    implicitHeight: contentItem.implicitHeight + 4 * root.s
                     contentItem: ListView {
                         clip: true
                         implicitHeight: contentHeight
