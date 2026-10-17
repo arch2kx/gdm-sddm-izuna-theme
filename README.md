@@ -42,7 +42,7 @@ This copies the theme to `/usr/share/sddm/themes/gdm-style` and sets it as the c
 
 ## Customize
 
-Edit `theme.conf` for the font, accent color, UI scale, clock shadow and icon sizes. The icons live in `assets/` (`usericon.png`, `settingsicon.png`, `powericon.png`, `backicon.png`). Swap them for your own. The Izuna wallpaper is not supplied for obvious reasons! It is not my own and I've modified specially for this theme! You'll have to private message me if you want it.
+Edit `theme.conf` for the font, accent color, UI scale, clock shadow and icon sizes. The icons live in `assets/` (`usericon.png`, `settingsicon.png`, `powericon.png`, `backicon.png`). Swap them for your own. The Izuna wallpaper from the screenshots is not included. It is fan art that I don't own and edited for this theme. To use a wallpaper, put it at `assets/wallpaper.png`. Without one, the theme falls back to a plain GDM-style background (`solidColor` in `theme.conf`).
 
 ## AI Disclosure
 

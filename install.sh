@@ -19,4 +19,11 @@ done
 sudo mkdir -p /etc/sddm.conf.d
 printf '[Theme]\nCurrent=%s\n' "$THEME" | sudo tee /etc/sddm.conf.d/10-theme.conf >/dev/null
 
+MAIN_CONF=/etc/sddm.conf
+if [ -f "$MAIN_CONF" ] && sudo sed -n '/^\[Theme\]/,/^\[/p' "$MAIN_CONF" | grep -q '^Current='; then
+    sudo cp -n "$MAIN_CONF" "$MAIN_CONF.bak"
+    sudo sed -i "/^\[Theme\]/,/^\[/ s|^Current=.*|Current=$THEME|" "$MAIN_CONF"
+    echo "Updated [Theme] in $MAIN_CONF (backup: $MAIN_CONF.bak)"
+fi
+
 echo "Installed to $DEST"
